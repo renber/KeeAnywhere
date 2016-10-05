@@ -7,6 +7,7 @@ using KeeAnywhere.StorageProviders.GoogleDrive;
 using KeeAnywhere.StorageProviders.HiDrive;
 using KeeAnywhere.StorageProviders.HubiC;
 using KeeAnywhere.StorageProviders.OneDrive;
+using KeeAnywhere.StorageProviders.Seafile;
 
 namespace KeeAnywhere.StorageProviders
 {
@@ -26,6 +27,7 @@ namespace KeeAnywhere.StorageProviders
             new StorageDescriptor(StorageType.HiDrive, "HiDrive", "hidrive", account => new HiDriveStorageProvider(account), () => new HiDriveStorageConfigurator(), PluginResources.HiDrive_16x16),
             new StorageDescriptor(StorageType.HubiC, "hubiC", "hubic", account => new HubiCStorageProvider(account), () => new HubiCStorageConfigurator(), PluginResources.HubiC_16x16),
             new StorageDescriptor(StorageType.OneDrive, "OneDrive", "onedrive", account => new OneDriveStorageProvider(account), () => new OneDriveStorageConfigurator(), PluginResources.OneDrive_16x16),
+            new StorageDescriptor(StorageType.Seafile, "Seafile", "seafile", account => new SeafileStorageProvider(account), () => new SeafileStorageConfigurator(), PluginResources.Seafile_16x16),
         };
     }
 }

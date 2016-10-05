@@ -12,5 +12,6 @@ namespace KeeAnywhere.StorageProviders
         HiDrive,
         HubiC,
         OneDrive,
+        Seafile,
     }
 }
