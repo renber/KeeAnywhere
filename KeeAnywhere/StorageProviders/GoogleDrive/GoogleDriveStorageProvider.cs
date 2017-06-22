@@ -42,7 +42,7 @@ namespace KeeAnywhere.StorageProviders.GoogleDrive
         }
 
 
-        public async Task<bool> Save(Stream stream, string path)
+        public async Task Save(Stream stream, string path)
         {
             var api = await GetApi();
 
@@ -59,20 +59,59 @@ namespace KeeAnywhere.StorageProviders.GoogleDrive
                 var folderName = CloudPath.GetDirectoryName(path);
                 var fileName = CloudPath.GetFileName(path);
 
-                var folder = await api.GetFileByPath(folderName);
-                if (folder == null)
-                    throw new InvalidOperationException(string.Format("Folder does not exist: {0}", folderName));
-
                 file = new File()
                 {
-                    Name = fileName,
-                    Parents = new[] {folder.Id},
+                    Name = fileName
                 };
+
+                if (!string.IsNullOrEmpty(folderName))
+                {
+                    var folder = await api.GetFileByPath(folderName);
+                    if (folder == null)
+                        throw new InvalidOperationException(string.Format("Folder does not exist: {0}", folderName));
+
+                    file.Parents = new[] {folder.Id};
+                }
 
                 progress = await api.Files.Create(file, stream, "application/octet-stream").UploadAsync();
             }
 
-            return progress.Status == UploadStatus.Completed && progress.Exception == null;
+            if (progress.Status != UploadStatus.Completed || progress.Exception != null)
+                throw new InvalidOperationException("Save to Google Drive failed.");
+        }
+
+        public async Task Copy(string sourcePath, string destPath)
+        {
+            var api = await GetApi();
+
+            var sourceFile = await api.GetFileByPath(sourcePath);
+            if (sourceFile == null)
+                throw new FileNotFoundException("Google Drive: File not found.", sourcePath);
+
+            var destFolder = CloudPath.GetDirectoryName(destPath);
+            var parentFolder = await api.GetFileByPath(destFolder);
+            if (parentFolder == null)
+                throw new FileNotFoundException("Google Drive: File not found.", destFolder);
+
+            var destFilename = CloudPath.GetFileName(destPath);
+            var destFile = new File
+            {
+                Name = destFilename,
+                Parents = new[] {parentFolder.Id}
+            };
+
+            var result = await api.Files.Copy(destFile, sourceFile.Id).ExecuteAsync();
+        }
+
+        public async Task Delete(string path)
+        {
+            var api = await GetApi();
+
+            var file = await api.GetFileByPath(path);
+            if (file == null)
+                throw new FileNotFoundException("Goolge Drive: File not found.", path);
+
+            var result = await api.Files.Delete(file.Id).ExecuteAsync();
         }
 
         public async Task<StorageProviderItem> GetRootItem()
@@ -105,6 +144,16 @@ namespace KeeAnywhere.StorageProviders.GoogleDrive
             });
 
             return newItems.ToArray();
+        }
+
+        public async Task<IEnumerable<StorageProviderItem>> GetChildrenByParentPath(string path)
+        {
+            var api = await GetApi();
+            var item = await api.GetFileByPath(path);
+            if (item == null)
+                throw new FileNotFoundException("Goolge Drive: File not found.", path);
+
+            return await GetChildrenByParentItem(new StorageProviderItem {Id = item.Id});
         }
 
         public bool IsFilenameValid(string filename)

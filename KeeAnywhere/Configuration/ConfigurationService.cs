@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using KeeAnywhere.StorageProviders;
+using KeePass.App.Configuration;
 using KeePass.Plugins;
 using KeePassLib.Utility;
 using Newtonsoft.Json;
@@ -150,6 +152,15 @@ namespace KeeAnywhere.Configuration
             {
                 this.PluginConfiguration = new PluginConfiguration();
             }
+
+            if (string.IsNullOrEmpty(this.PluginConfiguration.BackupToLocalFolder))
+            {
+                this.PluginConfiguration.BackupToLocalFolder = Path.Combine(AppConfigSerializer.LocalAppDataDirectory,
+                    "KeeAnywhereBackups");
+            }
+
+            if (this.PluginConfiguration.BackupCopies < 1)
+                this.PluginConfiguration.BackupCopies = 10;
         }
 
         private void SavePluginConfiguration()

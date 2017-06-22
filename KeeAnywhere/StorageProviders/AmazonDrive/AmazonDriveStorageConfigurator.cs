@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Web;
 using KeeAnywhere.Configuration;
 using KeeAnywhere.OAuth2;
+using KeePassLib.Utility;
 
 namespace KeeAnywhere.StorageProviders.AmazonDrive
 {
@@ -39,10 +40,17 @@ namespace KeeAnywhere.StorageProviders.AmazonDrive
 
         public async Task Initialize()
         {
+            MessageService.ShowWarning("Experimental support for Amazon Drive:", "Due to unclear Amazon Policy this provider may stop working at any time. Please do not rely on this functionality!");
+
             var loginUri = _api.BuildLoginUrl(this.RedirectionUrl.ToString(),
                 ACD.CloudDriveScopes.ReadOther | ACD.CloudDriveScopes.Write | ACD.CloudDriveScopes.Profile);
 
             this.AuthorizationUrl = new Uri(loginUri);
+        }
+
+        public bool CanClaim(Uri uri, string documentTitle)
+        {
+            return uri.ToString().StartsWith(this.RedirectionUrl.ToString(), StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task<bool> Claim(Uri uri, string documentTitle)
